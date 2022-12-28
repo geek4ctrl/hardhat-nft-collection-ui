@@ -1,5 +1,4 @@
 import { Contract, providers, utils } from "ethers";
-import { utimesSync } from "fs";
 import Head from "next/head";
 import React, { useEffect, useRef, useState } from "react";
 import Web3Modal from "web3modal";
@@ -20,7 +19,7 @@ export default function Home() {
 
   const [tokenIdsMinted, setTokenIdsMinted] = useState("0");
 
-  const web3modalRef: any = useRef();
+  const web3ModalRef: any = useRef();
 
   const presaleMint = async () => {
     try {
@@ -58,7 +57,7 @@ export default function Home() {
     } catch (error) {
       console.error(error);
     }
-  }
+  };
 
   const connectWallet = async () => {
     try {
@@ -97,10 +96,13 @@ export default function Home() {
       if (!_presaleStarted) {
         await getOwner();
       }
+      setPresaleStarted(_presaleStarted);
+      return _presaleStarted;
     } catch (error) {
+      console.error(error);
       return false;
     }
-  }
+  };
 
   const checkIfPresaleEnded = async () => {
     try {
@@ -108,7 +110,7 @@ export default function Home() {
 
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider);
 
-      const _presaleEnded = await nftContract.pressaleEnded();
+      const _presaleEnded = await nftContract.presaleEnded();
 
       const hasEnded = _presaleEnded.lt(Math.floor(Date.now() / 1000));
       if (hasEnded) {
@@ -118,9 +120,10 @@ export default function Home() {
       }
       return hasEnded;
     } catch (error) {
+      console.error(error);
       return false;
     }
-  }
+  };
 
   const getOwner = async () => {
     try {
@@ -157,7 +160,7 @@ export default function Home() {
   };
 
   const getProviderOrSigner = async (needSigner = false) => {
-    const provider = await web3modalRef.current.connect();
+    const provider = await web3ModalRef.current.connect();
     const web3Provider = new providers.Web3Provider(provider);
 
     const { chainId } = await web3Provider.getNetwork();
@@ -171,22 +174,22 @@ export default function Home() {
       return signer;
     }
     return web3Provider;
-  }
+  };
 
   useEffect(() => {
     if (!walletConnected) {
 
-      web3modalRef.current = new Web3Modal({
+      web3ModalRef.current = new Web3Modal({
         network: "goerli",
         providerOptions: {},
-        disableInjectedProvider: false
+        disableInjectedProvider: false,
       });
       connectWallet();
 
-      const _presaleStarted = checkIfPresaleStarted();
-      // if (_presaleStarted) {
+      const _presaleStarted: any = checkIfPresaleStarted();
+      if (_presaleStarted) {
       checkIfPresaleEnded();
-      //}
+      }
 
       getTokenIdsMinted();
 
@@ -211,7 +214,7 @@ export default function Home() {
     if (!walletConnected) {
       return (
         <button onClick={connectWallet} className={styles.button}>Connect your wallet</button>
-      )
+      );
     }
 
     if (loading) {
@@ -221,7 +224,7 @@ export default function Home() {
     if (isOwner && !presaleStarted) {
       return (
         <button className={styles.button} onClick={startPresale}>Start Presale</button>
-      )
+      );
     };
 
     if (!presaleStarted) {
@@ -229,14 +232,14 @@ export default function Home() {
         <div>
           <div className={styles.description}>Presale hasnt started!</div>
         </div>
-      )
+      );
     }
 
     if (presaleStarted && !presaleEnded) {
       return (
         <div>
           <div className={styles.description}>
-            Presale has started!!! If your address is whitelisted, Mint a Crypto Dev :)
+            Presale has started!!! If your address is whitelisted, Mint a Crypto Dev
           </div>
           <button className={styles.button} onClick={presaleMint}>Presale Mint</button>
         </div>
@@ -248,38 +251,37 @@ export default function Home() {
         <button className={styles.button} onClick={publicMint}>
           Public Mint
         </button>
-      )
+      );
     }
-
-    return (
-      <div>
-        <Head>
-          <title>Crypto Devs</title>
-          <meta name="description" content="Whitelist-Dapp" />
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
-        <div className={styles.main}>
-          <div>
-            <h1 className={styles.title}>Welcome to Crypto Devs!</h1>
-            <div className={styles.description}>
-              Its an NFT collection for developers in Crypto.
-            </div>
-            <div className={styles.description}>
-              {tokenIdsMinted}/20 have been minted
-            </div>
-            {renderButton()}
-          </div>
-          <div>
-            <img className={styles.image} src="./cryptodevs/0.svg" />
-          </div>
-        </div>
-
-        <footer className={styles.footer}>
-          Made with love by Crypto Devs
-        </footer>
-      </div>
-    )
-
   }
+
+  return (
+    <div>
+      <Head>
+        <title>Crypto Devs</title>
+        <meta name="description" content="Whitelist-Dapp" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <div className={styles.main}>
+        <div>
+          <h1 className={styles.title}>Welcome to Crypto Devs!</h1>
+          <div className={styles.description}>
+            Its an NFT collection for developers in Crypto.
+          </div>
+          <div className={styles.description}>
+            {tokenIdsMinted}/20 have been minted
+          </div>
+          {renderButton()}
+        </div>
+        <div>
+          <img className={styles.image} src="./cryptodevs/0.svg" />
+        </div>
+      </div>
+
+      <footer className={styles.footer}>
+        Made with love by Crypto Devs
+      </footer>
+    </div>
+  )
 
 }
